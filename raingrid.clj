@@ -10,10 +10,16 @@
    type
    & [{:keys [ver-offset
               ver-stride
-              ver-stripe-width]
+              ver-stripe-width
+              hor-offset
+              hor-stride
+              hor-stripe-width]
        :or   {ver-offset       0
               ver-stride       10
-              ver-stripe-width 1}}]]
+              ver-stripe-width 1
+              hor-offset       0
+              hor-stride       10
+              hor-stripe-width 1}}]]
   (let [image (java.awt.image.BufferedImage. width
                                              height
                                              java.awt.image.BufferedImage/TYPE_USHORT_GRAY)]
@@ -21,6 +27,10 @@
                               .getRaster)
           ver-white-array (int-array (* height
                                         ver-stripe-width)
+                                     (* (Short/MAX_VALUE)
+                                        2))
+          hor-white-array (int-array (* width
+                                        hor-stripe-width)
                                      (* (Short/MAX_VALUE)
                                         2))]
       (->> (range ver-offset
@@ -32,7 +42,17 @@
                                0 ;; takes an array of int/double/float
                                ver-stripe-width  ;; but the underlying format is UShort
                                height  ;; and seemingly 0-65535
-                               ver-white-array)))))
+                               ver-white-array))))
+      (->> (range hor-offset
+                  height
+                  hor-stride)
+           (run! (fn [y-start]
+                   (.setPixels raster
+                               0
+                               y-start
+                               width
+                               hor-stripe-width
+                               hor-white-array)))))
     (-> image
         (javax.imageio.ImageIO/write "tiff"
                                      (java.io.File. "vertical-stripes.tiff")))))
