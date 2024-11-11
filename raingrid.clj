@@ -15,24 +15,24 @@
               hor-stride
               hor-stripe-width]
        :or   {ver-offset       0
-              ver-stride       10
-              ver-stripe-width 1
+              ver-stride       7
+              ver-stripe-width 2
               hor-offset       0
-              hor-stride       10
-              hor-stripe-width 1}}]]
+              hor-stride       19
+              hor-stripe-width 3}}]]
   (let [image (java.awt.image.BufferedImage. width
                                              height
                                              java.awt.image.BufferedImage/TYPE_USHORT_GRAY)]
     (let [raster          (-> image
                               .getRaster)
-          ver-white-array (int-array (* height
-                                        ver-stripe-width)
-                                     (* (Short/MAX_VALUE)
-                                        2))
-          hor-white-array (int-array (* width
-                                        hor-stripe-width)
-                                     (* (Short/MAX_VALUE)
-                                        2))]
+          pattern-dist (fastmath.random/distribution :normal {:mu (* (Short/MAX_VALUE)
+                                                                     1.0) ;; half-max
+                                                              :sd (* (Short/MAX_VALUE)
+                                                                     0.2)})
+          ver-white-array-size (* height
+                                  ver-stripe-width)
+          hor-white-array-size (* width
+                                  hor-stripe-width)]
       (->> (range ver-offset
                   width
                   ver-stride)
@@ -42,7 +42,10 @@
                                0 ;; takes an array of int/double/float
                                ver-stripe-width  ;; but the underlying format is UShort
                                height  ;; and seemingly 0-65535
-                               ver-white-array))))
+                               (int-array ver-white-array-size
+                                          (->> pattern-dist
+                                               fastmath.random/->seq
+                                               (filter pos?)))))))
       (->> (range hor-offset
                   height
                   hor-stride)
@@ -52,7 +55,10 @@
                                y-start
                                width
                                hor-stripe-width
-                               hor-white-array)))))
+                               (int-array hor-white-array-size
+                                          (->> pattern-dist
+                                               fastmath.random/->seq
+                                               (filter pos?))))))))
     (-> image
         (javax.imageio.ImageIO/write "tiff"
                                      (java.io.File. "vertical-stripes.tiff")))))
