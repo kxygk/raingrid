@@ -58,9 +58,13 @@
                                ver-stripe-width  ;; but the underlying format is UShort
                                height  ;; and seemingly 0-65535
                                (int-array ver-white-array-size
-                                          (->> pattern-dist
-                                               fastmath.random/->seq
-                                               (filter pos?)))))))
+                                          (map +
+                                               (->> pattern-dist
+                                                    fastmath.random/->seq
+                                                    (filter pos?))#_
+                                               (->> background-dist
+                                                    fastmath.random/->seq
+                                                    (filter pos?))))))))
       ;; Horizontal stripes
       (->> (range hor-offset
                   height
@@ -72,9 +76,13 @@
                                width
                                hor-stripe-width
                                (int-array hor-white-array-size
-                                          (->> pattern-dist
-                                               fastmath.random/->seq
-                                               (filter pos?))))))))
+                                          (map +
+                                               (->> pattern-dist
+                                                    fastmath.random/->seq
+                                                    (filter pos?))
+                                               (->> background-dist
+                                                    fastmath.random/->seq
+                                                    (filter pos?)))))))))
     (-> image
         (javax.imageio.ImageIO/write "tiff"
                                      (java.io.File. "vertical-stripes.tiff")))))
