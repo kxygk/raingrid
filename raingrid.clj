@@ -8,13 +8,20 @@
   [width
    height
    type
-   & [{:keys [ver-offset
+   & [{:keys [background-noise-mean
+              pattern-noise-mean
+              pattern-noise-var-scaling-fac
+              ver-offset
               ver-stride
               ver-stripe-width
               hor-offset
               hor-stride
               hor-stripe-width]
-       :or   {ver-offset       0
+       :or   {background-noise-mean 5000.0
+              pattern-noise-mean (* Short/MAX_VALUE
+                                    0.5)
+              pattern-noise-var-scaling-fac 0.2
+              ver-offset       0
               ver-stride       7
               ver-stripe-width 2
               hor-offset       0
@@ -25,12 +32,11 @@
                                              java.awt.image.BufferedImage/TYPE_USHORT_GRAY)]
     (let [raster               (-> image
                                    .getRaster)
-          background-dist      (fastmath.random/distribution :gamma {:shape 1.0
-                                                                     :scale 5000.0})
-          pattern-dist         (fastmath.random/distribution :normal {:mu (* (Short/MAX_VALUE)
-                                                                             0.5) ;; half-max
-                                                                      :sd (* (Short/MAX_VALUE)
-                                                                             0.1)})
+          background-dist      (fastmath.random/distribution :gamma {:shape 1.0 ;; keep exponential
+                                                                     :scale background-noise-mean})
+          pattern-dist         (fastmath.random/distribution :normal {:mu pattern-noise-mean
+                                                                      :sd (* pattern-noise-mean
+                                                                             pattern-noise-var-scaling-fac)})
           total-field-size     (* width
                                   height)
           ver-white-array-size (* height
