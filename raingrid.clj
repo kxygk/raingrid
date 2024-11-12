@@ -26,11 +26,11 @@
     (let [raster               (-> image
                                    .getRaster)
           background-dist      (fastmath.random/distribution :gamma {:shape 1.0
-                                                                     :scale 10000.0})
+                                                                     :scale 5000.0})
           pattern-dist         (fastmath.random/distribution :normal {:mu (* (Short/MAX_VALUE)
-                                                                             1.0) ;; half-max
+                                                                             0.5) ;; half-max
                                                                       :sd (* (Short/MAX_VALUE)
-                                                                             0.2)})
+                                                                             0.1)})
           total-field-size     (* width
                                   height)
           ver-white-array-size (* height
