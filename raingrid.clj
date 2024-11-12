@@ -23,16 +23,31 @@
   (let [image (java.awt.image.BufferedImage. width
                                              height
                                              java.awt.image.BufferedImage/TYPE_USHORT_GRAY)]
-    (let [raster          (-> image
-                              .getRaster)
-          pattern-dist (fastmath.random/distribution :normal {:mu (* (Short/MAX_VALUE)
-                                                                     1.0) ;; half-max
-                                                              :sd (* (Short/MAX_VALUE)
-                                                                     0.2)})
+    (let [raster               (-> image
+                                   .getRaster)
+          background-dist      (fastmath.random/distribution :gamma {:shape 1.0
+                                                                     :scale 10000.0})
+          pattern-dist         (fastmath.random/distribution :normal {:mu (* (Short/MAX_VALUE)
+                                                                             1.0) ;; half-max
+                                                                      :sd (* (Short/MAX_VALUE)
+                                                                             0.2)})
+          total-field-size     (* width
+                                  height)
           ver-white-array-size (* height
                                   ver-stripe-width)
           hor-white-array-size (* width
                                   hor-stripe-width)]
+      ;; Fill field with gamma
+      (.setPixels raster
+                  0
+                  0 ;; takes an array of int/double/float
+                  width  ;; but the underlying format is UShort
+                  height  ;; and seemingly 0-65535
+                  (int-array total-field-size
+                             (->> background-dist
+                                  fastmath.random/->seq
+                                  (filter pos?))))
+      ;; Vertical stripes
       (->> (range ver-offset
                   width
                   ver-stride)
@@ -46,6 +61,7 @@
                                           (->> pattern-dist
                                                fastmath.random/->seq
                                                (filter pos?)))))))
+      ;; Horizontal stripes
       (->> (range hor-offset
                   height
                   hor-stride)
